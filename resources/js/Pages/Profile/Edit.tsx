@@ -1,37 +1,60 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import DeleteUserForm from './Partials/DeleteUserForm';
-import UpdatePasswordForm from './Partials/UpdatePasswordForm';
-import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
-import { Head } from '@inertiajs/react';
-import { PageProps } from '@/types';
+import { Button } from "@/Components/ui/button";
+import { PageProps } from "@/types";
+import { Head } from "@inertiajs/react";
+import { ChevronLeft } from "lucide-react";
+import UpdateInformation from "./UpdateInformation";
+import UpdatePassword from "./UpdatePassword";
+import DeleteUser from "./DeleteUser";
+import { useAppSelector } from "@/redux/app/hook";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { message, turnOff } from "@/redux/features/alertSlice";
+import { useToast } from "@/Components/ui/use-toast";
 
-export default function Edit({ auth, mustVerifyEmail, status }: PageProps<{ mustVerifyEmail: boolean, status?: string }>) {
+type Flash = {
+    message?: string | null;
+};
+
+export default function Profile({
+    auth,
+    flash,
+}: PageProps<{ auth: PageProps; flash: Flash }>) {
+    const dispatch = useDispatch();
+    const showAlert = useAppSelector((state) => state.alert.show);
+    const alertMessage = useAppSelector((state) => state.alert.message);
+    const { toast } = useToast();
+    useEffect(() => {
+        dispatch(message(flash?.message));
+    }, [flash]);
+
+    useEffect(() => {
+        if (showAlert) {
+            toast({
+                description: alertMessage,
+            });
+            dispatch(turnOff());
+        }
+    }, [showAlert]);
+
     return (
-        <AuthenticatedLayout
-            user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Profile</h2>}
-        >
-            <Head title="Profile" />
-
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                        <UpdateProfileInformationForm
-                            mustVerifyEmail={mustVerifyEmail}
-                            status={status}
-                            className="max-w-xl"
-                        />
-                    </div>
-
-                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                        <UpdatePasswordForm className="max-w-xl" />
-                    </div>
-
-                    <div className="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                        <DeleteUserForm className="max-w-xl" />
-                    </div>
+        <>
+            <Head title="profil" />
+            <div className="container my-3">
+                <a href="/">
+                    <Button variant="ghost">
+                        <ChevronLeft className="w-6 h-6 mr-1" />
+                        kembali
+                    </Button>
+                </a>
+                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6 my-3">
+                    <UpdateInformation
+                        email={auth.user.email}
+                        name={auth.user.name}
+                    />
+                    <UpdatePassword />
+                    <DeleteUser />
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </>
     );
 }

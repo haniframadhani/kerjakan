@@ -36,8 +36,9 @@ class ProfileController extends Controller
         }
 
         $request->user()->save();
-
-        return Redirect::route('profile.edit');
+        // redirect()->back()->with('message','berhasil menghapus kegiatan');
+        // return Redirect::route('profile.edit');
+        return Redirect::route('profile.edit')->with('message','berhasil memperbarui informasi');
     }
 
     /**
@@ -45,6 +46,9 @@ class ProfileController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        // dd($request->validate([
+        //     'password' => ['required', 'current_password'],
+        // ]));
         $request->validate([
             'password' => ['required', 'current_password'],
         ]);
@@ -58,6 +62,6 @@ class ProfileController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return Redirect::to('/');
+        return Redirect::to('/login');
     }
 }

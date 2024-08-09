@@ -1,113 +1,155 @@
-import { FormEventHandler } from 'react';
-import GuestLayout from '@/Layouts/GuestLayout';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Button } from "@/Components/ui/button";
+import { Card, CardContent } from "@/Components/ui/card";
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/Components/ui/form";
+import { Input } from "@/Components/ui/input";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Head, Link, router } from "@inertiajs/react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
-export default function Register() {
-    const { data, setData, post, processing, errors, reset } = useForm({
-        name: '',
-        email: '',
-        password: '',
-        password_confirmation: '',
+const formSchema = z
+    .object({
+        name: z.string().min(1, { message: "nama minimal harus 1 karakter" }),
+        email: z.string().email({ message: "alamat email tidak valid" }),
+        password: z.string().min(8, { message: "minimal 8 karakter" }),
+        password_confirmation: z
+            .string()
+            .min(8, { message: "minimal 8 karakter" }),
+    })
+    .superRefine(({ password, password_confirmation }, ctx) => {
+        if (password_confirmation !== password) {
+            ctx.addIssue({
+                code: "custom",
+                message: "konfirmasi kata sandi tidak sama",
+                path: ["password_confirmation"],
+            });
+        }
     });
 
-    const submit: FormEventHandler = (e) => {
-        e.preventDefault();
+const Register = () => {
+    const form = useForm<z.infer<typeof formSchema>>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            name: "",
+            email: "",
+            password: "",
+            password_confirmation: "",
+        },
+    });
 
-        post(route('register'), {
-            onFinish: () => reset('password', 'password_confirmation'),
-        });
-    };
+    function onSubmit(values: z.infer<typeof formSchema>) {
+        const data = { ...values };
+        router.post(route("register"), data);
+        form.reset();
+    }
 
     return (
-        <GuestLayout>
-            <Head title="Register" />
-
-            <form onSubmit={submit}>
-                <div>
-                    <InputLabel htmlFor="name" value="Name" />
-
-                    <TextInput
-                        id="name"
-                        name="name"
-                        value={data.name}
-                        className="mt-1 block w-full"
-                        autoComplete="name"
-                        isFocused={true}
-                        onChange={(e) => setData('name', e.target.value)}
-                        required
-                    />
-
-                    <InputError message={errors.name} className="mt-2" />
+        <>
+            <Head title="daftar" />
+            <div className="container flex flex-col w-screen h-screen items-center sm:justify-center pt-6 sm:pt-0 gap-2">
+                <h1 className="text-4xl w-fit font-bold">kerjakan</h1>
+                <div className="w-full sm:max-w-md">
+                    <Card>
+                        <CardContent className="!p-6">
+                            <Form {...form}>
+                                <form
+                                    onSubmit={form.handleSubmit(onSubmit)}
+                                    className="space-y-2"
+                                >
+                                    <FormField
+                                        control={form.control}
+                                        name="name"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>nama</FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        type="text"
+                                                        {...field}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="email"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>email</FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        type="email"
+                                                        {...field}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="password"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>
+                                                    kata sandi
+                                                </FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        type="password"
+                                                        {...field}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="password_confirmation"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>
+                                                    konfirmasi kata sandi
+                                                </FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        type="password"
+                                                        {...field}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <div className="flex justify-start flex-row-reverse">
+                                        <Button type="submit">daftar</Button>
+                                        <Link href={route("login")}>
+                                            <Button
+                                                variant="link"
+                                                className="text-gray-600"
+                                            >
+                                                sudah terdaftar?
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                </form>
+                            </Form>
+                        </CardContent>
+                    </Card>
                 </div>
-
-                <div className="mt-4">
-                    <InputLabel htmlFor="email" value="Email" />
-
-                    <TextInput
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={data.email}
-                        className="mt-1 block w-full"
-                        autoComplete="username"
-                        onChange={(e) => setData('email', e.target.value)}
-                        required
-                    />
-
-                    <InputError message={errors.email} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
-                    <TextInput
-                        id="password"
-                        type="password"
-                        name="password"
-                        value={data.password}
-                        className="mt-1 block w-full"
-                        autoComplete="new-password"
-                        onChange={(e) => setData('password', e.target.value)}
-                        required
-                    />
-
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel htmlFor="password_confirmation" value="Confirm Password" />
-
-                    <TextInput
-                        id="password_confirmation"
-                        type="password"
-                        name="password_confirmation"
-                        value={data.password_confirmation}
-                        className="mt-1 block w-full"
-                        autoComplete="new-password"
-                        onChange={(e) => setData('password_confirmation', e.target.value)}
-                        required
-                    />
-
-                    <InputError message={errors.password_confirmation} className="mt-2" />
-                </div>
-
-                <div className="flex items-center justify-end mt-4">
-                    <Link
-                        href={route('login')}
-                        className="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                    >
-                        Already registered?
-                    </Link>
-
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Register
-                    </PrimaryButton>
-                </div>
-            </form>
-        </GuestLayout>
+            </div>
+        </>
     );
-}
+};
+
+export default Register;
